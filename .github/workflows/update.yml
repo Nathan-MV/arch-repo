@@ -33,4 +33,4 @@ jobs:
         run: |
           cd arch-repo
           chmod +x update.sh
-          ./update.sh
+          ./update-arch-packages.sh
