@@ -23,6 +23,7 @@ jobs:
           pacman -S --needed --noconfirm base-devel git
           useradd -m yay
           echo "yay ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/yay
+          chown -R yay:yay /home/yay
           su -l yay -c "git clone https://aur.archlinux.org/yay.git"
           su -l yay -c "cd yay && sudo -u nobody makepkg -si --noconfirm"
           userdel -r yay
