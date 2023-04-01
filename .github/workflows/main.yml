@@ -21,7 +21,7 @@ jobs:
 
       - name: Switch to non-root user
         run: |
-          -c "pacman -Syyu --noconfirm" - pkgbuilder
+          su -c "pacman -Syyu --noconfirm" - pkgbuilder
 
       - name: Install yay
         run: |
