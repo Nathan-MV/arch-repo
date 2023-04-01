@@ -21,11 +21,11 @@ jobs:
       - name: Instalar yay
         run: |
           pacman -S --needed --noconfirm base-devel git
-          git clone https://aur.archlinux.org/yay.git
-          cd yay
-          makepkg -si --noconfirm
-          cd ..
-          rm -rf yay
+          useradd -m yay
+          echo "yay ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/yay
+          su -l yay -c "git clone https://aur.archlinux.org/yay.git"
+          su -l yay -c "cd yay && makepkg -si --noconfirm --asroot"
+          userdel -r yay
 
       - name: Verificar atualizações e atualizar PKGBUILDs
         run: |
