@@ -10,12 +10,18 @@ on:
 jobs:
   atualizar-pkgbuilds:
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
     services:
       archlinux:
         image: archlinux/base
     steps:
       - name: Checkout código
         uses: actions/checkout@v2
+
+      - name: Login Docker
+        run: echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
 
       - name: Instalar yay
         run: |
