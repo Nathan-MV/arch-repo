@@ -15,7 +15,7 @@ jobs:
       - name: Check for new release
         run: |
           set -e
-          for pkgbuild in $(curl -sL https://github.com/Nathan-MV/arch-repo | jq -r '.[].path' | grep PKGBUILD); do
+          for pkgbuild in $(curl -sL https://github.com/Nathan-MV/arch-repo | jq -r '.[].path' | grep 'packages/.*/PKGBUILD'); do
             if grep -q "source=('git+https://gitlab.com/" "$pkgbuild"; then
               dir=$(dirname "$pkgbuild")
               cd "$dir"
