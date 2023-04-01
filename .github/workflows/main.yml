@@ -1,0 +1,27 @@
+name: Atualizar PKGBUILDs no AUR
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # Executa a cada 10 minutos
+  push:
+    branches:
+      - main
+
+jobs:
+  atualizar-pkgbuilds:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v2
+
+      - name: Instalar dependências
+        run: |
+          sudo pacman -Syu --noconfirm
+          sudo pacman -S --needed --noconfirm aurutils
+
+      - name: Verificar atualizações e atualizar PKGBUILDs
+        run: |
+          for pkgbuild in packages/**/PKGBUILD; do
+            aur sync --aur --upgrades --no-view --no-confirm "$pkgbuild"
+          done
