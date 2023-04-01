@@ -10,15 +10,10 @@ on:
 jobs:
   atualizar-pkgbuilds:
     runs-on: ubuntu-latest
-    services:
-      archlinux:
-        image: archlinux
+    container: archlinux
     steps:
       - name: Checkout código
         uses: actions/checkout@v2
-
-      - name: Instalar pacman
-        run: sudo pacman -Syyu --noconfirm pacman
 
       - name: Atualizar repositórios
         run: sudo pacman -Syyu --noconfirm
