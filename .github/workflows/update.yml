@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Update repositories
-        run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools btrfs-progs dbus sudo git jq
+        run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools sudo git jq
       - name: Configure Chaotic AUR
         run: |
           pacman-key --init
