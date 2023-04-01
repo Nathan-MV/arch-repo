@@ -1,4 +1,4 @@
-name: Update PKGBUILD's
+name: Update PKGBUILD
 
 on:
   schedule:
