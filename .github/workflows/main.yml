@@ -15,7 +15,7 @@ jobs:
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
     services:
       archlinux:
-        image: archlinux/base
+        image: archlinux
     steps:
       - name: Checkout código
         uses: actions/checkout@v2
