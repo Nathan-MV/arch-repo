@@ -1,5 +1,0 @@
-- name: Arch Linux PKGBUILD builder action
-  uses: 2m/arch-pkgbuild-builder@v1.18
-  with:
-    target: 'srcinfo'
-    pkgname: 'komikku'
