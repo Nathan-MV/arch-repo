@@ -15,6 +15,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Create new sudo user
+        run: |
+          adduser pkgbuilder
+          usermod -aG sudo pkgbuilder
+
+      - name: Update repositories
+        run: pacman -Syyu --noconfirm
+
       - name: Install yay
         run: |
           sudo pacman -S --needed --noconfirm base-devel git
@@ -24,10 +32,7 @@ jobs:
           cd ..
           rm -rf yay
 
-      - name: Check for system updates
-        run: yay -Syu --noconfirm
-
-      - name: Check for package updates and update PKGBUILDs
+      - name: Check for updates and update PKGBUILDs
         run: |
           for pkgbuild in packages/**/PKGBUILD; do
             yay -Sua --noconfirm --noremovemake --noredownload --nobuild --nocleanmenu "$pkgbuild"
