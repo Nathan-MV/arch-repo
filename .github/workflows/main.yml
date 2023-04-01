@@ -24,7 +24,7 @@ jobs:
           useradd -m yay
           echo "yay ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/yay
           su -l yay -c "git clone https://aur.archlinux.org/yay.git"
-          su -l yay -c "cd yay && makepkg -si --noconfirm --asroot"
+          su -l yay -c "cd yay && sudo -u nobody makepkg -si --noconfirm"
           userdel -r yay
 
       - name: Verificar atualizações e atualizar PKGBUILDs
