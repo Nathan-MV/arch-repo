@@ -16,20 +16,23 @@ jobs:
         uses: actions/checkout@v2
       - name: Update repositories
         run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools btrfs-progs dbus sudo git
+      - name: Configure Chaotic AUR
+        run: |
+          pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+          pacman-key --lsign-key FBA220DFC880C036
+          pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+          echo "
+          [chaotic-aur]
+          Include = /etc/pacman.d/chaotic-mirrorlist" >>> /etc/pacman.conf
+      - name: Install paru
+        run: pacman -S paru --noconfirm
       - name: Create new sudo user
         run: |
           dbus-uuidgen --ensure=/etc/machine-id
           useradd -m user || true
           cd /home/user
-      - name: Install yay
-        run: |
-          git clone https://aur.archlinux.org/yay.git
-          cd yay
-          sudo makepkg -si --noconfirm
-          cd ..
-          rm -rf yay
       - name: Check for updates and update PKGBUILDs
         run: |
           for pkgbuild in packages/**/PKGBUILD; do
-            yay -Sua --noconfirm --noremovemake --noredownload --nobuild --nocleanmenu "$pkgbuild"
+            paru -Sua --noconfirm --noremovemake --noredownload --nobuild --nocleanmenu "$pkgbuild"
           done
