@@ -26,7 +26,7 @@ jobs:
           sudo usermod -aG nobody pkgbuilder
 
       - name: Switch to pkgbuilder user
-        run: su - pkgbuilder
+        run: su -l pkgbuilder
 
       - name: Install yay
         run: |
