@@ -17,15 +17,15 @@ jobs:
 
       - name: Atualizar repositórios
         run: pacman -Syyu --noconfirm
-
+  
       - name: Instalar yay
         run: |
           pacman -S --needed --noconfirm base-devel git
-          useradd -m yay
-          echo "yay ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/yay
-          su -l yay -c "export BUILDDIR=/tmp && git clone https://aur.archlinux.org/yay.git"
-          su -l yay -c "cd yay && export BUILDDIR=/tmp && sudo -u nobody makepkg -si --noconfirm"
-          userdel -r yay
+          git clone https://aur.archlinux.org/yay.git
+          cd yay
+          makepkg -si --noconfirm --root
+          cd ..
+          rm -rf yay
 
       - name: Verificar atualizações e atualizar PKGBUILDs
         run: |
