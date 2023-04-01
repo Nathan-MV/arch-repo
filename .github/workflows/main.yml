@@ -15,19 +15,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Create non-root user
-        run: |
-          useradd -m -G wheel pkgbuilder
-
-      - name: Switch to non-root user
-        run: |
-          su -c "pacman -Syyu --noconfirm" - pkgbuilder
-
       - name: Install yay
         run: |
-          su -c "sudo pacman -S --needed --noconfirm base-devel git" - pkgbuilder
-          su -c "git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si --noconfirm && cd .. && rm -rf yay" - pkgbuilder
+          sudo pacman -S --needed --noconfirm base-devel git
+          git clone https://aur.archlinux.org/yay.git
+          cd yay
+          makepkg -si --noconfirm
+          cd ..
+          rm -rf yay
 
-      - name: Check for updates and update PKGBUILDs
+      - name: Check for system updates
+        run: yay -Syu --noconfirm
+
+      - name: Check for package updates and update PKGBUILDs
         run: |
-          su -c 'for pkgbuild in packages/**/PKGBUILD; do yay -Sua --noconfirm --noremovemake --noredownload --nobuild --nocleanmenu "$pkgbuild"; done' - pkgbuilder
+          for pkgbuild in packages/**/PKGBUILD; do
+            yay -Sua --noconfirm --noremovemake --noredownload --nobuild --nocleanmenu "$pkgbuild"
+          done
