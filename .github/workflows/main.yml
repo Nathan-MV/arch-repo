@@ -18,10 +18,18 @@ jobs:
       - name: Create new sudo user
         run: |
           useradd -m pkgbuilder
-          usermod -aG pkgbuilder
+          usermod -aG nobody
+
+      - name: Switch to pkgbuilder user
+        run: sudo -u pkgbuilder bash
 
       - name: Update repositories
-        run: pacman -Syyu --noconfirm
+        run: |
+          pacman -Syyu --noconfirm
+          pacman -S sudo
+
+      - name: Switch to pkgbuilder user
+        run: sudo -u pkgbuilder bash
 
       - name: Install yay
         run: |
