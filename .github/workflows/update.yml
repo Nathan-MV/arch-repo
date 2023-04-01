@@ -1,23 +1,36 @@
-name: Arch Linux Package Updater
+name: Build PKGBUILDs
+
 on:
+  schedule:
+    - cron: "*/10 * * * *"  # Run every 10 minutes
   push:
     branches:
       - main
 
 jobs:
-  build:
+  update-pkgbuilds:
     runs-on: ubuntu-latest
-    container:
-      image: archlinux
-      options: --privileged
+    container: archlinux
     steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Update repositories
+        run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools btrfs-progs dbus sudo git jq
+      - name: Configure Chaotic AUR
         run: |
-          pacman -Syu --noconfirm --needed git jq
-      - name: Update Arch Linux packages
+          pacman-key --init
+          pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+          pacman-key --lsign-key FBA220DFC880C036
+          pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst' --noconfirm
+          echo "
+          [chaotic-aur]
+          Include = /etc/pacman.d/chaotic-mirrorlist" >> /etc/pacman.conf
+      - name: Install paru
+        run: pacman -Syu --noconfirm --noprogressbar --needed paru
+      - name: Clone repository
+        run: git clone https://github.com/Nathan-MV/arch-repo
+      - name: Execute shell script
         run: |
-          # Copy the shell script into the container
-          docker cp update-arch-packages.sh $CONTAINER_ID:/tmp/update-arch-packages.sh
-          # Run the shell script in the container
-          docker exec $CONTAINER_ID /bin/bash /tmp/update-arch-packages.sh
+          cd arch-repo
+          chmod +x update.sh
+          ./update.sh
