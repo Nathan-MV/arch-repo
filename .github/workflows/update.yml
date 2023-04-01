@@ -1,35 +1,23 @@
+name: Arch Linux Package Updater
 on:
-  schedule:
-    - cron: '0 */12 * * *'  # Run every 12 hours
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
-  update-pkgbuild:
+  build:
     runs-on: ubuntu-latest
+    container:
+      image: archlinux/latest
+      options: --privileged
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Check for new release
+      - uses: actions/checkout@v2
+      - name: Install dependencies
         run: |
-          set -e
-          for pkgbuild in $(curl -sL https://github.com/Nathan-MV/arch-repo | jq -r '.[].path' | grep 'packages/.*/PKGBUILD'); do
-            if grep -q "source=('git+https://gitlab.com/" "$pkgbuild"; then
-              dir=$(dirname "$pkgbuild")
-              cd "$dir"
-              TAG=$(curl -s https://gitlab.com/api/v4/projects/$(echo "$pkgbuild" | awk -F/ '{print $4}')/releases | jq -r '.[0].tag_name')
-              if [ -n "$TAG" ] && [ "$TAG" != "$(grep pkgver PKGBUILD | awk -F= '{print $2}')" ]; then
-                PKGURL=$(curl -s https://gitlab.com/api/v4/projects/$(echo "$pkgbuild" | awk -F/ '{print $4}')/releases/tags/$TAG | jq -r '.assets[0].browser_download_url')
-                PKGHASH=$(curl -sL "$PKGURL" | sha256sum | awk '{print $1}')
-                sed -i "s/pkgver=.*/pkgver=$TAG/" PKGBUILD
-                sed -i "s/sha256sums=.*/sha256sums=('$PKGHASH')/" PKGBUILD
-                makepkg --printsrcinfo > .SRCINFO
-                git add PKGBUILD .SRCINFO
-                git commit -m "Update $(basename $(pwd)) to version $TAG"
-                git push origin main
-              fi
-              cd -
-            fi
-          done
+          pacman -Syu --noconfirm --needed git jq
+      - name: Update Arch Linux packages
+        run: |
+          # Copy the shell script into the container
+          docker cp update-arch-packages.sh $CONTAINER_ID:/tmp/update-arch-packages.sh
+          # Run the shell script in the container
+          docker exec $CONTAINER_ID /bin/bash /tmp/update-arch-packages.sh
