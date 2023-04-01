@@ -23,7 +23,7 @@ jobs:
       - name: Create new sudo user
         run: |
           sudo useradd -m pkgbuilder
-          sudo usermod -aG nobody
+          sudo usermod -aG nobody pkgbuilder
 
       - name: Switch to pkgbuilder user
         run: sudo -u pkgbuilder bash
