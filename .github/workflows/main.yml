@@ -14,20 +14,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
       - name: Update repositories
-        run: |
-          pacman -Syyu --noconfirm
-          pacman -S sudo shadow --noconfirm
-
+        run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools btrfs-progs dbus sudo
       - name: Create new sudo user
         run: |
-          useradd -m pkgbuilder
-          usermod -aG nobody pkgbuilder
+          dbus-uuidgen --ensure=/etc/machine-id
 
+          sed -i "s|MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
+          useradd -m user || true
+          cd /home/user
       - name: Switch to pkgbuilder user
         run: su -l pkgbuilder
-
       - name: Install yay
         run: |
           sudo pacman -S --needed --noconfirm base-devel git
@@ -36,7 +33,6 @@ jobs:
           makepkg -si --noconfirm
           cd ..
           rm -rf yay
-
       - name: Check for updates and update PKGBUILDs
         run: |
           for pkgbuild in packages/**/PKGBUILD; do
