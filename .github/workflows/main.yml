@@ -15,18 +15,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Create new sudo user
-        run: |
-          useradd -m pkgbuilder
-          usermod -aG nobody
-
-      - name: Switch to pkgbuilder user
-        run: sudo -u pkgbuilder bash
-
       - name: Update repositories
         run: |
           pacman -Syyu --noconfirm
           pacman -S sudo
+
+      - name: Create new sudo user
+        run: |
+          sudo useradd -m pkgbuilder
+          sudo usermod -aG nobody
 
       - name: Switch to pkgbuilder user
         run: sudo -u pkgbuilder bash
