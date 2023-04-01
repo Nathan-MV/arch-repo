@@ -1,8 +1,9 @@
-name: Update PKGBUILD
-
 on:
   schedule:
     - cron: '0 */12 * * *'  # Run every 12 hours
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -13,21 +14,22 @@ jobs:
         uses: actions/checkout@v2
       - name: Check for new release
         run: |
-          for pkgbuild in packages/**/PKGBUILD; do
+          set -e
+          for pkgbuild in $(curl -sL https://github.com/Nathan-MV/arch-repo | jq -r '.[].path' | grep PKGBUILD); do
             if grep -q "source=('git+https://gitlab.com/" "$pkgbuild"; then
               dir=$(dirname "$pkgbuild")
-              cd "$dir" || exit 1
-              TAG=$(curl -s https://gitlab.com/api/v4/projects/$(grep "source=('git+https://gitlab.com/" PKGBUILD | awk -F/ '{print $5}' | awk '{print $1}')/releases | jq -r '.[0].tag_name')
+              cd "$dir"
+              TAG=$(curl -s https://gitlab.com/api/v4/projects/$(echo "$pkgbuild" | awk -F/ '{print $4}')/releases | jq -r '.[0].tag_name')
               if [ -n "$TAG" ] && [ "$TAG" != "$(grep pkgver PKGBUILD | awk -F= '{print $2}')" ]; then
-                sed -i "s/pkgver=.*/pkgver=$TAG/" PKGBUILD
-                PKGURL=$(curl -s https://gitlab.com/api/v4/projects/$(grep "source=('git+https://gitlab.com/" PKGBUILD | awk -F/ '{print $5}' | awk '{print $1}')/releases/tags/$TAG | jq -r '.assets[0].browser_download_url')
+                PKGURL=$(curl -s https://gitlab.com/api/v4/projects/$(echo "$pkgbuild" | awk -F/ '{print $4}')/releases/tags/$TAG | jq -r '.assets[0].browser_download_url')
                 PKGHASH=$(curl -sL "$PKGURL" | sha256sum | awk '{print $1}')
+                sed -i "s/pkgver=.*/pkgver=$TAG/" PKGBUILD
                 sed -i "s/sha256sums=.*/sha256sums=('$PKGHASH')/" PKGBUILD
                 makepkg --printsrcinfo > .SRCINFO
                 git add PKGBUILD .SRCINFO
                 git commit -m "Update $(basename $(pwd)) to version $TAG"
-                git push
+                git push origin main
               fi
-              cd - || exit 1
+              cd -
             fi
           done
