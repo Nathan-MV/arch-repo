@@ -1,0 +1,13 @@
+- name: ArkToria Build Arch Package
+  # You may pin to the exact commit or the version.
+  # uses: ArkToria/arch-pkgbuild-builder@09dda1698af77ab40fa7a6cad2509a35f582b7c2
+  uses: ArkToria/arch-pkgbuild-builder@v1.22
+  with:
+    # Path to DIRECTORY where the PKGBUILD file is. Assumes the directory is the name of package, ie /path/to/pkgname/
+    pkgname: komikku
+    # Validation target. Can be one of: "pkgbuild", "srcinfo", "run"
+    target: pkgbuild
+    # Command to run after package installation. Used when target=run
+    command: # optional
+    # Turns debugging on
+    debug: # optional
