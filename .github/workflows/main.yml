@@ -24,7 +24,7 @@ jobs:
           pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst' --noconfirm
           echo "
           [chaotic-aur]
-          Include = /etc/pacman.d/chaotic-mirrorlist" >>> /etc/pacman.conf
+          Include = /etc/pacman.d/chaotic-mirrorlist" >> /etc/pacman.conf
       - name: Install paru
         run: pacman -S paru --noconfirm
       - name: Create new sudo user
