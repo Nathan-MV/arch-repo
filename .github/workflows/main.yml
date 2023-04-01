@@ -1,33 +1,42 @@
-name: Atualizar PKGBUILDs no AUR
+name: Update PKGBUILDs
 
 on:
   schedule:
-    - cron: "*/10 * * * *"  # Executa a cada 10 minutos
+    - cron: "*/10 * * * *"  # Run every 10 minutes
   push:
     branches:
       - main
 
 jobs:
-  atualizar-pkgbuilds:
+  update-pkgbuilds:
     runs-on: ubuntu-latest
     container: archlinux
     steps:
-      - name: Checkout código
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Atualizar repositórios
-        run: pacman -Syyu --noconfirm
-  
-      - name: Instalar yay
+      - name: Create non-root user
         run: |
-          pacman -S --needed --noconfirm base-devel git
+          useradd -m -G wheel pkgbuilder
+          echo "pkgbuilder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+      - name: Switch to non-root user
+        run: |
+          su - pkgbuilder
+
+      - name: Update repositories
+        run: pacman -Syyu --noconfirm
+
+      - name: Install yay
+        run: |
+          sudo pacman -S --needed --noconfirm base-devel git
           git clone https://aur.archlinux.org/yay.git
           cd yay
-          -u nobody makepkg --noconfirm
+          makepkg -si --noconfirm
           cd ..
           rm -rf yay
 
-      - name: Verificar atualizações e atualizar PKGBUILDs
+      - name: Check for updates and update PKGBUILDs
         run: |
           for pkgbuild in packages/**/PKGBUILD; do
             yay -Sua --noconfirm --noremovemake --noredownload --nobuild --nocleanmenu "$pkgbuild"
