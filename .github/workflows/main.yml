@@ -15,13 +15,24 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v2
 
-      - name: Instalar dependências
+      - name: Set up Arch Linux environment
+        uses: docker://archlinux/base
+
+      - name: Instalar yay
         run: |
-          sudo pacman -Syu --noconfirm
-          sudo pacman -S --needed --noconfirm aurutils
+          pacman -Syu --noconfirm
+          pacman -S --needed --noconfirm base-devel git
+          git clone https://aur.archlinux.org/yay.git
+          cd yay
+          makepkg -si --noconfirm
+          cd ..
+          rm -rf yay
+
+      - name: Atualizar repositórios
+        run: yay -Syyu --noconfirm
 
       - name: Verificar atualizações e atualizar PKGBUILDs
         run: |
           for pkgbuild in packages/**/PKGBUILD; do
-            aur sync --aur --upgrades --no-view --no-confirm "$pkgbuild"
+            yay -Sua --noconfirm --noremovemake --noredownload --nobuild --nocleanmenu "$pkgbuild"
           done
