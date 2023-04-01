@@ -15,20 +15,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Update repositories
-        run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools btrfs-progs dbus sudo
+        run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools btrfs-progs dbus sudo git
       - name: Create new sudo user
         run: |
           dbus-uuidgen --ensure=/etc/machine-id
-
-          sed -i "s|MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
           useradd -m user || true
           cd /home/user
       - name: Install yay
         run: |
-          sudo pacman -S --needed --noconfirm base-devel git
           git clone https://aur.archlinux.org/yay.git
           cd yay
-          makepkg -si --noconfirm
+          sudo makepkg -si --noconfirm
           cd ..
           rm -rf yay
       - name: Check for updates and update PKGBUILDs
