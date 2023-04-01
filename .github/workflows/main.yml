@@ -10,13 +10,12 @@ on:
 jobs:
   atualizar-pkgbuilds:
     runs-on: ubuntu-latest
+    container:
+      image: archlinux/base:latest
 
     steps:
       - name: Checkout código
         uses: actions/checkout@v2
-
-      - name: Set up Arch Linux environment
-        uses: docker://archlinux/base
 
       - name: Instalar yay
         run: |
