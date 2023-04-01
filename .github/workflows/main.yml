@@ -23,8 +23,6 @@ jobs:
           sed -i "s|MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
           useradd -m user || true
           cd /home/user
-      - name: Switch to pkgbuilder user
-        run: su -l pkgbuilder
       - name: Install yay
         run: |
           sudo pacman -S --needed --noconfirm base-devel git
