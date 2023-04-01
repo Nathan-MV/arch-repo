@@ -26,8 +26,18 @@ for pkgbuild in ./arch-repo/packages/**/PKGBUILD; do
       echo "Found a new release on GitLab: $TAG"
       PKGURL=$(curl -s "https://gitlab.com/api/v4/projects/$user%2F$project/releases/tags/$TAG" | jq -r '.assets[0].browser_download_url')
       echo "PKGURL run success"
-      PKGHASH=$(curl -sL "$PKGURL" | sha256sum | awk '{print $1}')
-      echo "PKGHASH run success"
+      if [ -f "$project-$TAG.tar.gz" ]; then
+        local_etag=$(etag "$project-$TAG.tar.gz")
+        if [ "$local_etag" == "$PKGURL" ]; then
+          PKGHASH=$(sha256sum "$project-$TAG.tar.gz" | awk '{print $1}')
+        fi
+      fi
+      if [ -z "$PKGHASH" ]; then
+        curl -sL "https://gitlab.com/$user/$project/-/archive/$TAG/$project-$TAG.tar.gz" -o "$project-$TAG.tar.gz"
+        echo "PKG downloaded successfully"
+        PKGHASH=$(sha256sum "$project-$TAG.tar.gz" | awk '{print $1}')
+        echo "PKGHASH run success"
+      fi
       sed -i "s/pkgver=.*/pkgver=$TAG/" PKGBUILD
       echo "sed run success"
       sed -i "s/sha256sums=.*/sha256sums=('$PKGHASH')/" PKGBUILD
