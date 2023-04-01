@@ -18,27 +18,16 @@ jobs:
       - name: Create non-root user
         run: |
           useradd -m -G wheel pkgbuilder
-          echo "pkgbuilder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
       - name: Switch to non-root user
         run: |
-          su - pkgbuilder
-
-      - name: Update repositories
-        run: pacman -Syyu --noconfirm
+          su -c "pacman -Syyu --noconfirm" - pkgbuilder
 
       - name: Install yay
         run: |
-          pacman -S --noconfirm sudo
-          sudo pacman -S --needed --noconfirm base-devel git
-          git clone https://aur.archlinux.org/yay.git
-          cd yay
-          makepkg -si --noconfirm
-          cd ..
-          rm -rf yay
+          su -c "sudo pacman -S --needed --noconfirm base-devel git" - pkgbuilder
+          su -c "git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si --noconfirm && cd .. && rm -rf yay" - pkgbuilder
 
       - name: Check for updates and update PKGBUILDs
         run: |
-          for pkgbuild in packages/**/PKGBUILD; do
-            yay -Sua --noconfirm --noremovemake --noredownload --nobuild --nocleanmenu "$pkgbuild"
-          done
+          su -c 'for pkgbuild in packages/**/PKGBUILD; do yay -Sua --noconfirm --noremovemake --noredownload --nobuild --nocleanmenu "$pkgbuild"; done' - pkgbuilder
