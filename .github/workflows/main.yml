@@ -26,7 +26,7 @@ jobs:
           [chaotic-aur]
           Include = /etc/pacman.d/chaotic-mirrorlist" >> /etc/pacman.conf
       - name: Install paru
-        run: pacman -S paru --noconfirm
+        run: pacman -Syu --noconfirm --noprogressbar --needed paru
       - name: Create new sudo user
         run: |
           dbus-uuidgen --ensure=/etc/machine-id
