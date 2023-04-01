@@ -32,5 +32,5 @@ jobs:
       - name: Execute shell script
         run: |
           cd arch-repo
-          chmod +x update.sh
+          chmod +x update-arch-packages.sh
           ./update-arch-packages.sh
