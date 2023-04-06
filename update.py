@@ -12,7 +12,8 @@ def download_file(url, filepath):
         shutil.copyfileobj(response.raw, f)
 
 updated_pkgs = set()
-for filepath in glob.glob("packages/**/PKGBUILD", recursive=True):
+for filepath in glob.glob(os.path.join("packages", "**", "PKGBUILD")):
+    print(filepath)
     with open(filepath, "r") as f:
         contents = f.read()
     if url_match := re.search(r"url=(https://gitlab.com/[^\n]*)", contents):
@@ -22,6 +23,7 @@ for filepath in glob.glob("packages/**/PKGBUILD", recursive=True):
         response = requests.get(f"https://gitlab.com/api/v4/projects/{user}%2F{project}/releases")
         response.raise_for_status()
         tag = response.json()[0]["tag_name"]
+        print(f"New version detected: {tag}")
         if tag != re.search(r"pkgver=(.*)", contents)[1]:
             url = f"https://gitlab.com/{user}/{project}/-/archive/{tag}/{project}-{tag}.tar.gz"
             response = requests.head(url)
@@ -41,6 +43,7 @@ for filepath in glob.glob("packages/**/PKGBUILD", recursive=True):
                     pkg_hash = hashlib.sha256(f.read()).hexdigest()
             with open("PKGBUILD", "w") as f:
                 f.write(re.sub(r"pkgver=(.*)", f"pkgver={tag}", re.sub(r"sha256sums=\('(.*)'\)", f"sha256sums=('{pkg_hash}')", contents)))
+                print(f"PKGBUILD updated to {tag} for {project}")
             updated_pkgs.add(project)
         else:
             print(f"No updates found on GitLab or the PKGBUILD file is already up-to-date for {project}.")
