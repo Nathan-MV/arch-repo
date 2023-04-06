@@ -130,7 +130,7 @@ class Update:
         return self.filename == "PKGBUILD"
 
 
-if __name__ == "__main__":
+if __name__ == "__ignora__":
     update = Update(
         "https://github.com/Nathan-MV/arch-repo.git", "arch-repo", "PKGBUILD"
     )

@@ -9,14 +9,20 @@ import concurrent.futures
 from tqdm import tqdm
 
 def download_file(url, filepath):
-    with requests.get(url, stream=True) as response:
+    session = requests.Session()
+    with session.get(url, stream=True) as response:
         response.raise_for_status()
         file_size = int(response.headers.get("content-length", 0))
-        with open(filepath, "wb") as f:
-            with tqdm(total=file_size, unit="B", unit_scale=True, desc=filepath) as progress_bar:
-                for data in response.iter_content(chunk_size=1024):
-                    f.write(data)
-                    progress_bar.update(len(data))
+        chunk_size = 4 * 1024 * 1024  # 1 MB chunks
+        with open(filepath, "wb") as f, tqdm(total=file_size, unit="B", unit_scale=True, desc=filepath) as progress_bar:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = []
+                for chunk in response.iter_content(chunk_size=chunk_size):
+                    future = executor.submit(f.write, chunk)
+                    futures.append(future)
+                for future in concurrent.futures.as_completed(futures):
+                    future.result()
+                    progress_bar.update(chunk_size)
 
 updated_pkgs = set()
 for filepath in glob.glob(os.path.join("packages", "**", "PKGBUILD")):
@@ -43,9 +49,7 @@ for filepath in glob.glob(os.path.join("packages", "**", "PKGBUILD")):
                 if file_hash == pkg_url:
                     pkg_hash = file_hash
             if not pkg_hash:
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(download_file, url, f"{project}-{tag}.tar.gz")
-                    future.result()
+                download_file(url, f"{project}-{tag}.tar.gz")
                 with open(f"{project}-{tag}.tar.gz", "rb") as f:
                     pkg_hash = hashlib.sha256(f.read()).hexdigest()
             with open("PKGBUILD", "w") as f:
