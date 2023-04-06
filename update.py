@@ -4,18 +4,17 @@ import requests
 import hashlib
 import glob
 from tqdm import tqdm
+import git
+from contextlib import closing
 
-def download_file(url, filepath):
-    session = requests.Session()
-    with session.get(url, stream=True) as response:
+def download_file(url: str, filepath: str) -> None:
+    with requests.Session() as session, closing(session.get(url, stream=True)) as response:
         response.raise_for_status()
         file_size = int(response.headers.get("content-length", 0))
-        chunk_size = 4 * 1024 * 1024  # 1 MB chunks
+        chunk_size = 4 * 1024 * 1024  # 4 MB chunks
         with open(filepath, "wb") as f, tqdm(total=file_size, unit="B", unit_scale=True, desc=filepath) as progress_bar:
-            downloaded = 0
             for chunk in response.iter_content(chunk_size=chunk_size):
                 f.write(chunk)
-                downloaded += len(chunk)
                 progress_bar.update(len(chunk))
 
 for filepath in glob.glob(os.path.join("packages", "**", "PKGBUILD")):
@@ -24,14 +23,16 @@ for filepath in glob.glob(os.path.join("packages", "**", "PKGBUILD")):
         contents = f.read()
     if url_match := re.search(r"url=(https://gitlab.com/[^\n]*)", contents):
         gitlab_url = url_match[1]
-        user, project = gitlab_url.split("/")[-2:]
+        parts = gitlab_url.split("/", 4)
+        url = "/".join(parts[:-2])
+        user, project = parts[-2:]
         os.chdir(os.path.dirname(filepath))
-        response = requests.get(f"https://gitlab.com/api/v4/projects/{user}%2F{project}/releases")
-        response.raise_for_status()
-        tag = response.json()[0]["tag_name"]
-        print(f"New version detected: {tag}")
+        repo = git.Repo(search_parent_directories=True)
+        gitlab_url = f"{url}/{user}/{project}.git"
+        tag = repo.git.ls_remote(gitlab_url, "refs/tags/*", sort="-v:refname", exit_code=True).split("\n")[0].split("refs/tags/")[1]
+        print(f"New version found: {tag}")
         if tag != re.search(r"pkgver=(.*)", contents)[1]:
-            url = f"https://gitlab.com/{user}/{project}/-/archive/{tag}/{project}-{tag}.tar.gz"
+            url = f"{url}/{user}/{project}/-/archive/{tag}/{project}-{tag}.tar.gz"
             response = requests.head(url)
             response.raise_for_status()
             pkg_url = response.headers["ETag"]
@@ -49,5 +50,5 @@ for filepath in glob.glob(os.path.join("packages", "**", "PKGBUILD")):
                 f.write(re.sub(r"pkgver=(.*)", f"pkgver={tag}", re.sub(r"sha256sums=\('(.*)'\)", f"sha256sums=('{pkg_hash}')", contents)))
                 print(f"PKGBUILD updated to {tag} for {project}")
         else:
-            print(f"No updates found on GitLab or the PKGBUILD file is already up-to-date for {project}.")
+            print("No updates found for the PKGBUILD's.")
         os.chdir("../../")
