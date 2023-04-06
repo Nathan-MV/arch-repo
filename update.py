@@ -47,7 +47,7 @@ for filepath in glob.glob(os.path.join("packages", "**", "PKGBUILD")):
             updated_pkgs.add(project)
         else:
             print(f"No updates found on GitLab or the PKGBUILD file is already up-to-date for {project}.")
-        os.chdir("../../../")
+        os.chdir("../../")
 
 if updated_pkgs:
     print(f"Updated PKGBUILD files for: {', '.join(updated_pkgs)}")
