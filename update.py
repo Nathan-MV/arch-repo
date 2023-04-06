@@ -6,10 +6,17 @@ import subprocess
 import hashlib
 import glob
 import concurrent.futures
+from tqdm import tqdm
 
 def download_file(url, filepath):
-    with requests.get(url, stream=True) as response, open(filepath, "wb") as f:
-        shutil.copyfileobj(response.raw, f)
+    with requests.get(url, stream=True) as response:
+        response.raise_for_status()
+        file_size = int(response.headers.get("content-length", 0))
+        with open(filepath, "wb") as f:
+            with tqdm(total=file_size, unit="B", unit_scale=True, desc=filepath) as progress_bar:
+                for data in response.iter_content(chunk_size=1024):
+                    f.write(data)
+                    progress_bar.update(len(data))
 
 updated_pkgs = set()
 for filepath in glob.glob(os.path.join("packages", "**", "PKGBUILD")):
